@@ -1,3 +1,5 @@
+@import '~antd/dist/antd.css';
+
 .App {
   text-align: center;
 }
@@ -36,3 +38,32 @@
     transform: rotate(360deg);
   }
 }
+
+.login-card {
+  max-width: 340px;
+}
+
+.login-form {
+  max-width: 300px;
+}
+
+.login-form-button {
+  width: 100%;
+}
+.site-card-wrapper {
+  background: #ececec;
+  padding: 30px;
+}
+  [data-theme="dark"] .site-card-wrapper {
+    background: #303030;
+  }
+
+  .logo {
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 16px;
+  }
+  
+  .site-layout .site-layout-background {
+    background: #fff;
+  }

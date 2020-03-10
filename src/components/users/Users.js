@@ -2,14 +2,16 @@ import React, { Component } from "react";
 import { Button } from "antd";
 import CreateEditUserModal from "./CreateEditUserModal";
 import UsersList from "./UsersList";
-import { createUser, deleteUser, getUsers, editUser } from "../../api/users";
+import EditCredentialsModal from "./EditCredentialsModal"
+import { createUser, deleteUser, getUsers, editUser, updateUserCredentials } from "../../api/users";
 import moment from "moment";
 
 class App extends Component {
   state = {
     users: [],
     isVisibleCreateEditUser: false,
-    editUserId: null
+    isVisibleCredentials: false,
+    editUserId: null,
   };
 
   getAllUsers = () =>
@@ -79,6 +81,37 @@ class App extends Component {
     });
   };
 
+  handleSubmitCredentials = values =>
+  updateUserCredentials(this.state.editUserId, values.username, values.password, values.area)
+    .then(user => {
+      this.setState(stateCopy => {
+        const userIndexToEdit = stateCopy.users.findIndex(user => user.key === stateCopy.editUserId);
+
+        if (userIndexToEdit !== -1) {
+          stateCopy.users[userIndexToEdit] = {
+            key: user.id,
+            username: user.username,
+            name: user.name,
+            birthday: user.birthday ? moment(user.birthday) : null,
+            area: user.area
+          };
+        }
+
+        stateCopy.isVisibleCredentials = false;
+        stateCopy.editUserId = null;
+
+        return stateCopy;
+      });
+    })
+    .catch(error => {});
+
+handleCancelCredentials = () => {
+  this.setState({
+    isVisibleCredentials: false,
+    editUserId: null
+  });
+};
+
   handleClickCreate = () => {
     this.setState({ isVisibleCreateEditUser: true });
   };
@@ -86,6 +119,13 @@ class App extends Component {
   handleClickEdit = userId => {
     this.setState({
       isVisibleCreateEditUser: true,
+      editUserId: userId
+    });
+  };
+
+  handleClickCredentials = (userId) => {
+    this.setState({
+      isVisibleCredentials: true,
       editUserId: userId
     });
   };
@@ -104,7 +144,7 @@ class App extends Component {
     });
 
   render() {
-    const { users, isVisibleCreateEditUser, editUserId } = this.state;
+    const { users, isVisibleCreateEditUser, isVisibleCredentials, editUserId } = this.state;
 
     const editUser = editUserId ? users.find(user => user.key === editUserId) : undefined;
 
@@ -121,7 +161,15 @@ class App extends Component {
             user={editUser}
           />
         )}
-        <UsersList users={users} onClickEdit={this.handleClickEdit} onClickDelete={this.handleClickDelete} />
+          {isVisibleCredentials && (
+          <EditCredentialsModal
+            visible={isVisibleCredentials}
+            onSubmit={this.handleSubmitCredentials}
+            onCancel={this.handleCancelCredentials}
+            user={editUser}
+          />
+        )}
+        <UsersList users={users} onClickEdit={this.handleClickEdit} onClickCredentials={this.handleClickCredentials} onClickDelete={this.handleClickDelete} />
       </div>
     );
   }

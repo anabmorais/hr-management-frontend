@@ -4,7 +4,7 @@ import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import { ScheduleOutlined, ControlOutlined, UserOutlined } from "@ant-design/icons";
 import WorkSchedule from "./WorkSchedule";
 import Tasks from "./Tasks";
-import Absences from "./Absences";
+import Absences from "./absences/Absences";
 import Users from "./users/Users";
 
 const { Header, Content, Footer, Sider } = Layout;
@@ -79,7 +79,7 @@ class Main extends Component {
                 </Route>
               </div>
             </Content>
-            <Footer style={{ textAlign: "center" }}>Ant Design ©2018 Created by Ant UED</Footer>
+            <Footer style={{ textAlign: "center" }}>2020 Created by Ana Morais</Footer>
           </Layout>
         </Layout>
       </Router>

@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { Table } from "antd";
-import { EditTwoTone, DeleteTwoTone } from "@ant-design/icons";
+import { EditTwoTone, DeleteTwoTone, LockTwoTone } from "@ant-design/icons";
 
 class UsersList extends Component {
   state = {
@@ -16,7 +16,7 @@ class UsersList extends Component {
   };
 
   render() {
-    const { users, onClickEdit, onClickDelete } = this.props;
+    const { users, onClickEdit, onClickCredentials, onClickDelete } = this.props;
 
     let { sortedInfo, filteredInfo } = this.state;
     sortedInfo = sortedInfo || {};
@@ -80,6 +80,7 @@ class UsersList extends Component {
         render: userId => (
           <span>
             <EditTwoTone style={{ marginRight: 18, fontSize: 20 }} onClick={() => onClickEdit(userId)} />
+            <LockTwoTone twoToneColor="#ffa940" style={{ marginRight: 18, fontSize: 20 }} onClick={() => onClickCredentials(userId)}/>
             <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 20 }} onClick={() => onClickDelete(userId)} />
           </span>
         )

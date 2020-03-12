@@ -1,8 +1,15 @@
 import React, { Component } from "react";
+import TasksList from "./TasksList";
+
+
 
 class Tasks extends Component {
+
   render() {
-    return <div>Tasks</div>;
+    
+    return <div>
+  <TasksList />
+    </div>;
   }
 }
 

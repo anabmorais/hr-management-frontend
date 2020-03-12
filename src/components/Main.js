@@ -3,7 +3,7 @@ import { Layout, Menu, Breadcrumb } from "antd";
 import { BrowserRouter as Router, Route, Link } from "react-router-dom";
 import { ScheduleOutlined, ControlOutlined, UserOutlined } from "@ant-design/icons";
 import WorkSchedule from "./WorkSchedule";
-import Tasks from "./Tasks";
+import Tasks from "./tasks/Tasks";
 import Absences from "./absences/Absences";
 import Users from "./users/Users";
 

@@ -1,9 +1,10 @@
 import React, { Component } from "react";
-import { Calendar, Button } from "antd";
-import { getAbsences, createAbsence } from "../../api/absences";
-import AddAbsencesModal from "./AddAbsencesModal"
-import {getUsers} from "../../api/users"
+import { Button, Calendar, Card, Typography } from "antd";
+import { CalendarOutlined } from "@ant-design/icons";
+import AddAbsencesModal from "./AddAbsencesModal";
 import moment from "moment";
+import { getAbsences, createAbsence } from "../../api/absences";
+import { getUsers } from "../../api/users";
 
 class Absences extends Component {
   state = {
@@ -24,7 +25,7 @@ class Absences extends Component {
       });
     });
 
-    getAllUsers = () =>
+  getAllUsers = () =>
     getUsers().then(data => {
       this.setState({
         users: data.map(user => ({
@@ -51,9 +52,7 @@ class Absences extends Component {
         {this.state.absences
           .filter(absence => this.isDateEqual(absence.date, date))
           .map(absence => (
-            <li key={absence.key}>
-              {absence.user.name}
-            </li>
+            <li key={absence.key}>{absence.user.name}</li>
           ))}
       </ul>
     );
@@ -64,21 +63,21 @@ class Absences extends Component {
   };
 
   handleSubmitAbsences = values =>
-  createAbsence(values.userId, values.date)
-    .then(absence => {
-      this.setState(stateCopy => {
-        stateCopy.isVisibleAddAbsences = false;
+    createAbsence(values.userId, values.date)
+      .then(absence => {
+        this.setState(stateCopy => {
+          stateCopy.isVisibleAddAbsences = false;
 
-        stateCopy.absences.push({
-          key: absence.id,
-          date: moment(absence.date),
-          user: absence.user
+          stateCopy.absences.push({
+            key: absence.id,
+            date: moment(absence.date),
+            user: absence.user
+          });
+
+          return stateCopy;
         });
-
-        return stateCopy;
-      });
-    })
-    .catch(error => {});
+      })
+      .catch(error => {});
 
   handleCancelAbsences = () => {
     this.setState({
@@ -88,22 +87,30 @@ class Absences extends Component {
   };
 
   render() {
-    const {users, isVisibleAddAbsences} = this.state
+    const { users, isVisibleAddAbsences } = this.state;
     return (
-      <div>
-         <Button type="primary" onClick={this.handleClickAddAbsences}>
-          Add absences
-        </Button>
-        <Calendar dateCellRender={this.dateCellRender} mode="month" />
-        {isVisibleAddAbsences && (
-          <AddAbsencesModal
-            visible={isVisibleAddAbsences}
-            onSubmit={this.handleSubmitAbsences}
-            onCancel={this.handleCancelAbsences}
-            users={users}
-          />
-        )}
-      </div>
+      <>
+        <Typography.Title level={3}>Absences</Typography.Title>
+        <Card>
+          <Button
+            type="primary"
+            icon={<CalendarOutlined />}
+            onClick={this.handleClickAddAbsences}
+            style={{ marginBottom: "12px" }}
+          >
+            Add
+          </Button>
+          <Calendar dateCellRender={this.dateCellRender} mode="month" />
+          {isVisibleAddAbsences && (
+            <AddAbsencesModal
+              visible={isVisibleAddAbsences}
+              onSubmit={this.handleSubmitAbsences}
+              onCancel={this.handleCancelAbsences}
+              users={users}
+            />
+          )}
+        </Card>
+      </>
     );
   }
 }

@@ -1,8 +1,9 @@
 import React, { Component } from "react";
-import { Button } from "antd";
+import { Button, Card, Typography } from "antd";
+import { UserAddOutlined } from "@ant-design/icons";
 import CreateEditUserModal from "./CreateEditUserModal";
 import UsersList from "./UsersList";
-import EditCredentialsModal from "./EditCredentialsModal"
+import EditCredentialsModal from "./EditCredentialsModal";
 import { createUser, deleteUser, getUsers, editUser, updateUserCredentials } from "../../api/users";
 import moment from "moment";
 
@@ -11,8 +12,12 @@ class App extends Component {
     users: [],
     isVisibleCreateEditUser: false,
     isVisibleCredentials: false,
-    editUserId: null,
+    editUserId: null
   };
+
+  componentDidMount() {
+    this.getAllUsers();
+  }
 
   getAllUsers = () =>
     getUsers().then(data => {
@@ -26,10 +31,6 @@ class App extends Component {
         }))
       });
     });
-
-  componentDidMount() {
-    this.getAllUsers();
-  }
 
   handleSubmitCreate = values =>
     createUser(values.name, values.birthday, values.area)
@@ -82,35 +83,35 @@ class App extends Component {
   };
 
   handleSubmitCredentials = values =>
-  updateUserCredentials(this.state.editUserId, values.username, values.password, values.area)
-    .then(user => {
-      this.setState(stateCopy => {
-        const userIndexToEdit = stateCopy.users.findIndex(user => user.key === stateCopy.editUserId);
+    updateUserCredentials(this.state.editUserId, values.username, values.password, values.area)
+      .then(user => {
+        this.setState(stateCopy => {
+          const userIndexToEdit = stateCopy.users.findIndex(user => user.key === stateCopy.editUserId);
 
-        if (userIndexToEdit !== -1) {
-          stateCopy.users[userIndexToEdit] = {
-            key: user.id,
-            username: user.username,
-            name: user.name,
-            birthday: user.birthday ? moment(user.birthday) : null,
-            area: user.area
-          };
-        }
+          if (userIndexToEdit !== -1) {
+            stateCopy.users[userIndexToEdit] = {
+              key: user.id,
+              username: user.username,
+              name: user.name,
+              birthday: user.birthday ? moment(user.birthday) : null,
+              area: user.area
+            };
+          }
 
-        stateCopy.isVisibleCredentials = false;
-        stateCopy.editUserId = null;
+          stateCopy.isVisibleCredentials = false;
+          stateCopy.editUserId = null;
 
-        return stateCopy;
-      });
-    })
-    .catch(error => {});
+          return stateCopy;
+        });
+      })
+      .catch(error => {});
 
-handleCancelCredentials = () => {
-  this.setState({
-    isVisibleCredentials: false,
-    editUserId: null
-  });
-};
+  handleCancelCredentials = () => {
+    this.setState({
+      isVisibleCredentials: false,
+      editUserId: null
+    });
+  };
 
   handleClickCreate = () => {
     this.setState({ isVisibleCreateEditUser: true });
@@ -123,7 +124,7 @@ handleCancelCredentials = () => {
     });
   };
 
-  handleClickCredentials = (userId) => {
+  handleClickCredentials = userId => {
     this.setState({
       isVisibleCredentials: true,
       editUserId: userId
@@ -149,28 +150,41 @@ handleCancelCredentials = () => {
     const editUser = editUserId ? users.find(user => user.key === editUserId) : undefined;
 
     return (
-      <div>
-        <Button type="primary" onClick={this.handleClickCreate}>
-          Create User
-        </Button>
-        {isVisibleCreateEditUser && (
-          <CreateEditUserModal
-            visible={isVisibleCreateEditUser}
-            onSubmit={editUserId ? this.handleSubmitEdit : this.handleSubmitCreate}
-            onCancel={this.handleCancelCreateEdit}
-            user={editUser}
-          />
-        )}
+      <>
+        <Typography.Title level={3}>Users</Typography.Title>
+        <Card>
+          <Button
+            type="primary"
+            icon={<UserAddOutlined />}
+            onClick={this.handleClickCreate}
+            style={{ marginBottom: "12px" }}
+          >
+            Create
+          </Button>
+          {isVisibleCreateEditUser && (
+            <CreateEditUserModal
+              visible={isVisibleCreateEditUser}
+              onSubmit={editUserId ? this.handleSubmitEdit : this.handleSubmitCreate}
+              onCancel={this.handleCancelCreateEdit}
+              user={editUser}
+            />
+          )}
           {isVisibleCredentials && (
-          <EditCredentialsModal
-            visible={isVisibleCredentials}
-            onSubmit={this.handleSubmitCredentials}
-            onCancel={this.handleCancelCredentials}
-            user={editUser}
+            <EditCredentialsModal
+              visible={isVisibleCredentials}
+              onSubmit={this.handleSubmitCredentials}
+              onCancel={this.handleCancelCredentials}
+              user={editUser}
+            />
+          )}
+          <UsersList
+            users={users}
+            onClickEdit={this.handleClickEdit}
+            onClickCredentials={this.handleClickCredentials}
+            onClickDelete={this.handleClickDelete}
           />
-        )}
-        <UsersList users={users} onClickEdit={this.handleClickEdit} onClickCredentials={this.handleClickCredentials} onClickDelete={this.handleClickDelete} />
-      </div>
+        </Card>
+      </>
     );
   }
 }

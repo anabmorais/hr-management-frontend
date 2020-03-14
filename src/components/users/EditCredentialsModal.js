@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Form, Input} from "antd";
+import { Modal, Form, Input } from "antd";
 
 const EditCredentialsModal = props => {
   const { visible, onSubmit, onCancel, user } = props;
@@ -23,21 +23,21 @@ const EditCredentialsModal = props => {
       onCancel={onCancel}
     >
       <Form form={form} layout="vertical" initialValues={user}>
-      <Form.Item
-        label="Username"
-        name="username"
-        rules={[{ required: true, message: 'Please input your username!' }]}
-      >
-        <Input />
-      </Form.Item>
+        <Form.Item
+          label="Username"
+          name="username"
+          rules={[{ required: true, message: "Please input your username!" }]}
+        >
+          <Input />
+        </Form.Item>
 
-      <Form.Item
-        label="Password"
-        name="password"
-        rules={[{ required: true, message: 'Please input your password!' }]}
-      >
-        <Input.Password />
-      </Form.Item>
+        <Form.Item
+          label="Password"
+          name="password"
+          rules={[{ required: true, message: "Please input your password!" }]}
+        >
+          <Input.Password />
+        </Form.Item>
       </Form>
     </Modal>
   );

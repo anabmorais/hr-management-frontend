@@ -1,7 +1,12 @@
 import React, { Component } from "react";
-import { GithubPicker } from "react-color";
-import { Card, Button, Input } from "antd";
+import { Card, Input } from "antd";
 import { BgColorsOutlined, EditTwoTone, DeleteTwoTone, CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import { GithubPicker } from "react-color";
+
+const NEW_TASK = {
+  name: "",
+  color: null
+};
 
 class TaskCard extends Component {
   static colors = [
@@ -27,62 +32,115 @@ class TaskCard extends Component {
     "#90BEB1"
   ];
 
-  state = {
-    isEditing: false,
-    isVisibleColorPicker: false
-  };
-
-  handleClickEdit = () => {
-    this.setState({ isEditing: true });
-  };
-
-  handleClickCancel = () => {
-    this.setState({
-      isEditing: false,
-      isVisibleColorPicker: false
-    });
-  };
-
-  handleChangeComplete = color => {
-    this.setState({ background: color.hex });
-  };
+  constructor(props) {
+    super(props);
+    this.state = {
+      isEditing: props.task === undefined,
+      isVisibleColorPicker: false,
+      task: props.task === undefined ? NEW_TASK : props.task
+    };
+  }
 
   handleClickColorPicker = () => {
     this.setState({ isVisibleColorPicker: true });
   };
 
-  render() {
-    const { task } = this.props;
-    console.log(task.color);
+  handleClickEdit = () => {
+    this.setState({ isEditing: true, task: this.props.task });
+  };
+
+  handleClickCancel = () => {
+    this.setState({
+      isEditing: this.props.task === undefined ? true : false,
+      isVisibleColorPicker: false,
+      task: this.props.task === undefined ? NEW_TASK : this.props.task
+    });
+  };
+
+  handleChangeName = event => {
+    this.setState({
+      task: { ...this.state.task, name: event.target.value }
+    });
+  };
+
+  handleChangeColor = color => {
+    this.setState({ task: { ...this.state.task, color: color.hex } });
+  };
+
+  renderViewingButtons() {
     return (
-      <Card.Grid className="task-card" style={{ backgroundColor: `#${task.color}` }}>
+      <>
+        <EditTwoTone style={{ marginRight: 18, fontSize: 20 }} onClick={this.handleClickEdit} />
+        <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 20 }} onClick={this.props.onClickDelete} />
+      </>
+    );
+  }
+
+  renderEditingButtons() {
+    const canSave = this.state.task.name !== "" && this.state.task.color !== null;
+
+    return (
+      <>
+        <CheckOutlined
+          style={{ color: canSave ? "#73d13d" : "#d9d9d9", marginRight: 18, fontSize: 20 }}
+          onClick={
+            canSave
+              ? () => {
+                  this.props.onClickSave(this.state.task).then(() => {
+                    if (this.props.task === undefined) {
+                      // New task card - stay in edit mode but reset the fields
+                      this.setState({
+                        isVisibleColorPicker: false,
+                        task: NEW_TASK
+                      });
+                    } else {
+                      // Existing task card - leave edit mode
+                      this.setState({
+                        isEditing: false,
+                        isVisibleColorPicker: false
+                      });
+                    }
+                  });
+                }
+              : undefined
+          }
+        />
+        <CloseOutlined style={{ color: "#ff4d4f", fontSize: 20 }} onClick={this.handleClickCancel} />
+      </>
+    );
+  }
+
+  renderColorPickerButton() {
+    return (
+      this.state.isEditing && (
+        <BgColorsOutlined
+          style={{ fontSize: 20 }}
+          onClick={this.state.isEditing ? this.handleClickColorPicker : undefined}
+        />
+      )
+    );
+  }
+
+  render() {
+    return (
+      <Card.Grid
+        className="task-card"
+        style={{ backgroundColor: this.state.isEditing ? this.state.task.color : this.props.task.color }}
+      >
         <Input
-          addonBefore={
-            <BgColorsOutlined style={{ fontSize: 20 }} onClick={this.state.isEditing && this.handleClickColorPicker} />
-          }
-          addonAfter={
-            this.state.isEditing ? (
-              <>
-                <CheckOutlined style={{ color: "#73d13d", marginRight: 18, fontSize: 20 }} onClick={() => {}} />
-                <CloseOutlined style={{ color: "#ff4d4f", fontSize: 20 }} onClick={this.handleClickCancel} />
-              </>
-            ) : (
-              <>
-                <EditTwoTone style={{ marginRight: 18, fontSize: 20 }} onClick={this.handleClickEdit} />
-                <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 20 }} onClick={() => {}} />
-              </>
-            )
-          }
+          addonBefore={this.renderColorPickerButton()}
+          addonAfter={this.state.isEditing ? this.renderEditingButtons() : this.renderViewingButtons()}
           size="large"
           placeholder="Task name"
-          value={task.name}
+          value={this.state.isEditing ? this.state.task.name : this.props.task.name}
+          onChange={this.handleChangeName}
         />
         {this.state.isVisibleColorPicker && (
           <GithubPicker
             className="color-picker"
             colors={TaskCard.colors}
             width="262px"
-            onChangeComplete={this.handleChangeComplete}
+            onChangeComplete={this.handleChangeColor}
           />
         )}
       </Card.Grid>

@@ -4,6 +4,8 @@ import PrivateRoute from "./components/PrivateRoute";
 import Login from "./components/Login";
 import Main from "./components/Main";
 import "./App.css";
+import {DragDropContext} from 'react-dnd'
+import HTML5Backend from 'react-dnd-html5-backend'
 
 class App extends Component {
   render() {
@@ -22,4 +24,4 @@ class App extends Component {
   }
 }
 
-export default App;
+export default DragDropContext(HTML5Backend)(App);

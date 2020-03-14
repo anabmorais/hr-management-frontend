@@ -1,11 +1,12 @@
 import React, { Component } from "react";
-import { Layout, Menu, Breadcrumb } from "antd";
-import { BrowserRouter as Router, Route, Link } from "react-router-dom";
-import { ScheduleOutlined, ControlOutlined, UserOutlined } from "@ant-design/icons";
+import { Layout, Menu, Button} from "antd";
+import { BrowserRouter as Router, Route, Link, withRouter } from "react-router-dom";
+import { ScheduleOutlined, ControlOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import WorkSchedule from "./WorkSchedule";
 import Tasks from "./tasks/Tasks";
 import Absences from "./absences/Absences";
 import Users from "./users/Users";
+import { removeToken } from "../utils/auth";
 
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
@@ -16,15 +17,20 @@ class Main extends Component {
     collapsed: false
   };
 
-  onCollapse = collapsed => {
+  handleCollapse = collapsed => {
     this.setState({ collapsed });
   };
+
+  handleClickLogout= () => {
+removeToken()
+this.props.history.push("/")
+  } 
 
   render() {
     return (
       <Router>
         <Layout style={{ minHeight: "100vh" }}>
-          <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.onCollapse}>
+          <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.handleCollapse}>
             <div className="logo">Logo</div>
             <Menu theme="dark" defaultSelectedKeys={["3"]} mode="inline">
               <Menu.Item key="work-schedule">
@@ -58,12 +64,16 @@ class Main extends Component {
             </Menu>
           </Sider>
           <Layout className="site-layout">
-            <Header className="site-layout-background" style={{ padding: 0 }} />
-            <Content style={{ margin: "0 16px" }}>
-              <Breadcrumb style={{ margin: "16px 0" }}>
-                <Breadcrumb.Item>User</Breadcrumb.Item>
-                <Breadcrumb.Item>Bill</Breadcrumb.Item>
-              </Breadcrumb>
+            <Header className="site-layout-background" style={{ padding: '24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center'} }>
+            <Button
+            type="primary"
+            icon={<LogoutOutlined />}
+            onClick={this.handleClickLogout}
+          >
+            Logout
+          </Button>
+            </Header>
+            <Content style={{ margin: "24px" }}>
               <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
                 <Route path="/work-schedule">
                   <WorkSchedule />
@@ -87,4 +97,4 @@ class Main extends Component {
   }
 }
 
-export default Main;
+export default withRouter (Main);

@@ -1,9 +1,9 @@
 import React, { Component } from "react";
 import { Button, Calendar, Card, Typography } from "antd";
-import { CalendarOutlined } from "@ant-design/icons";
+import { CalendarOutlined, DeleteTwoTone} from "@ant-design/icons";
 import AddAbsencesModal from "./AddAbsencesModal";
 import moment from "moment";
-import { getAbsences, createAbsence } from "../../api/absences";
+import { getAbsences, createAbsence, deleteAbsence } from "../../api/absences";
 import { getUsers } from "../../api/users";
 
 class Absences extends Component {
@@ -52,11 +52,24 @@ class Absences extends Component {
         {this.state.absences
           .filter(absence => this.isDateEqual(absence.date, date))
           .map(absence => (
-            <li key={absence.key}>{absence.user.name}</li>
+            <li key={absence.key}>{absence.user.name} <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 15 }} onClick={() => this.handleAbsencesDelete(absence.key)}/></li>
           ))}
       </ul>
     );
   };
+
+  handleAbsencesDelete = absenceId =>
+  deleteAbsence(absenceId).then(() => {
+    this.setState(stateCopy => {
+      const absenceIndexToRemove = stateCopy.absences.findIndex(absence => absence.key === absenceId);
+
+      if (absenceIndexToRemove !== -1) {
+        stateCopy.absences.splice(absenceIndexToRemove, 1);
+      }
+
+      return stateCopy;
+    });
+  });
 
   handleClickAddAbsences = () => {
     this.setState({ isVisibleAddAbsences: true });
@@ -106,7 +119,7 @@ class Absences extends Component {
               visible={isVisibleAddAbsences}
               onSubmit={this.handleSubmitAbsences}
               onCancel={this.handleCancelAbsences}
-              users={users}
+              users={users} 
             />
           )}
         </Card>

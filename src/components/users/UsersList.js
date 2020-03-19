@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Table } from "antd";
+import { Table, Popconfirm } from "antd";
 import { EditTwoTone, DeleteTwoTone, LockTwoTone } from "@ant-design/icons";
 
 class UsersList extends Component {
@@ -85,7 +85,9 @@ class UsersList extends Component {
               style={{ marginRight: 18, fontSize: 20 }}
               onClick={() => onClickCredentials(userId)}
             />
-            <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 20 }} onClick={() => onClickDelete(userId)} />
+             <Popconfirm placement="right" title="Are you sure to delete this user?" onConfirm={() => onClickDelete(userId)} okText="Yes" cancelText="No">
+            <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 20 }} />
+            </Popconfirm>
           </span>
         )
       }

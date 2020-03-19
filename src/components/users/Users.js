@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import { Button, Card, Typography } from "antd";
-import { UserAddOutlined } from "@ant-design/icons";
+import { Button, Card, Typography, Popconfirm, message } from "antd";
+import { UserAddOutlined,  } from "@ant-design/icons";
 import CreateEditUserModal from "./CreateEditUserModal";
 import UsersList from "./UsersList";
 import EditCredentialsModal from "./EditCredentialsModal";
@@ -131,7 +131,7 @@ class App extends Component {
     });
   };
 
-  handleClickDelete = userId =>
+  handleClickDelete = userId => {
     deleteUser(userId).then(() => {
       this.setState(stateCopy => {
         const userIndexToRemove = stateCopy.users.findIndex(user => user.key === userId);
@@ -142,7 +142,7 @@ class App extends Component {
 
         return stateCopy;
       });
-    });
+    })};
 
   render() {
     const { users, isVisibleCreateEditUser, isVisibleCredentials, editUserId } = this.state;

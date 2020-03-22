@@ -4,7 +4,8 @@ import { Form, Input, Button, Alert } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { loginUser } from "../api/users";
 import { setToken } from "../utils/auth";
-import { Card } from "antd";
+import { Card, Col, Row } from "antd";
+import logo from "../images/taskphase.png";
 
 // https://reacttraining.com/react-router/web/example/auth-workflow
 class Login extends Component {
@@ -47,11 +48,12 @@ class Login extends Component {
 
   render() {
     return (
-      <div className="site-card-wrapper" align="center">
-        <Card title="Login" bordered={false} className="login-card">
-          {this.state.errorMessage && <Alert message={this.state.errorMessage} type="error" showIcon />}
+      <Row justify="space-around" align="middle" style={{height: "100vh", backgroundColor: "#001529"}}>
+      <Col span={4}>
+        <Card cover={<img alt="example" src={logo} style={{padding: "24px"}}/>}>
+          {this.state.errorMessage && <Alert  type="error" message={this.state.errorMessage} showIcon style={{marginBottom: "24px"}} />}
           <Form
-            name="normal_login"
+            name="login"
             className="login-form"
             onFinish={this.handleFinish}
             onValuesChange={this.handleValuesChange}
@@ -63,16 +65,15 @@ class Login extends Component {
               <Input prefix={<LockOutlined className="site-form-item-icon" />} type="password" placeholder="Password" />
             </Form.Item>
             <Form.Item>
-              <Button type="primary" htmlType="submit" className="login-form-button">
+              <Button type="primary" htmlType="submit" style={{marginBottom: "6px"}} block>
                 Log in
               </Button>
-              <Button type="primary" className="login-form-button">
-                <Link to={"/work-schedule-overview"}>View the planning</Link>
-              </Button>
+               Or <Link to={"/work-schedule-overview"}>view the planning</Link>.
             </Form.Item>
           </Form>
         </Card>
-      </div>
+      </Col>
+      </Row>
     );
   }
 }

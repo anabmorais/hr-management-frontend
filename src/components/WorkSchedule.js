@@ -1,54 +1,12 @@
 import React, { Component } from "react";
-import { message, Typography, Card } from "antd";
+import { message, Typography, Card, Row, Col, Affix, Alert } from "antd";
 import Scheduler, { SchedulerData, ViewTypes, CellUnits, DATE_FORMAT } from "react-big-scheduler";
 import moment from "moment";
 import { getUsers } from "../api/users";
 import { getTasks } from "../api/tasks";
+import { createEvent, editEvent, deleteEvent, getEvents } from "../api/work-schedule";
 
 moment.locale("pt-pt");
-
-const events = [
-  {
-    id: 1,
-    start: "2017-12-18 09:30:00",
-    end: "2017-12-19 23:30:00",
-    resourceId: "r1",
-    title: "I am finished",
-    bgColor: "#D9D9D9"
-  },
-  {
-    id: 2,
-    start: "2017-12-18 12:30:00",
-    end: "2017-12-26 23:30:00",
-    resourceId: "r2",
-    title: "I am not resizable",
-    resizable: false
-  },
-  {
-    id: 3,
-    start: "2017-12-19 12:30:00",
-    end: "2017-12-20 23:30:00",
-    resourceId: "r3",
-    title: "I am not movable",
-    movable: false
-  },
-  {
-    id: 4,
-    start: "2017-12-19 14:30:00",
-    end: "2017-12-20 23:30:00",
-    resourceId: "r1",
-    title: "I am not start-resizable",
-    startResizable: false
-  },
-  {
-    id: 5,
-    start: "2017-12-19 15:30:00",
-    end: "2017-12-20 23:30:00",
-    resourceId: "r2",
-    title: "R2 has recurring tasks every week on Tuesday, Friday",
-    bgColor: "#f759ab"
-  }
-];
 
 class WorkSchedule extends Component {
   constructor(props) {
@@ -60,9 +18,9 @@ class WorkSchedule extends Component {
       false,
       false,
       {
-        schedulerWidth: 1400,
+        schedulerWidth: 1350,
         dayResourceTableWidth: 150,
-        dayCellWidth: 125,
+        dayCellWidth: 120,
         dayStartFrom: 8,
         dayStopTo: 17,
         checkConflict: true,
@@ -90,7 +48,7 @@ class WorkSchedule extends Component {
 
     schedulerData.localeMoment.locale("pt-pt");
 
-    schedulerData.setEvents(events);
+    schedulerData.setEvents([]);
 
     this.state = {
       users: [],
@@ -103,22 +61,24 @@ class WorkSchedule extends Component {
   componentDidMount() {
     this.getAllUsers();
     this.getAllTasks();
+    this.getEvents(this.state.schedulerData)
   }
 
   getAllUsers = () =>
     getUsers().then(data => {
-      this.setState(
-        {
-          users: data.map(user => ({
-            id: user.id,
-            username: user.username,
-            name: user.name,
-            birthday: user.birthday ? moment(user.birthday) : null,
-            area: user.area
-          }))
-        },
-        () => this.state.schedulerData.setResources(this.state.users)
-      );
+      this.setState(stateCopy => {
+        stateCopy.users = data.map(user => ({
+          id: user.id,
+          username: user.username,
+          name: user.name,
+          birthday: user.birthday ? moment(user.birthday) : null,
+          area: user.area
+        }));
+
+        stateCopy.schedulerData.setResources(stateCopy.users.filter(user => user.area !== 'office'));
+
+        return stateCopy;
+      });
     });
 
   getAllTasks = () =>
@@ -132,16 +92,66 @@ class WorkSchedule extends Component {
       });
     });
 
+    getEvents = schedulerData => {
+      getEvents(new Date (schedulerData.startDate)).then(events => {
+
+        //Receives the events from the server and transforms them into the scheduler format
+        schedulerData.setEvents(
+          events.map(event => ({
+            id: event.id,
+            title: event.task.name,
+            start: event.start,
+            end: event.end,
+            resourceId: event.user.id,
+            bgColor: event.task.color
+          }))
+        );
+  
+        this.setState({
+          schedulerData
+        });
+      });
+    }
+
+  capStartTime = start => {
+    const startMoment = moment(start);
+    if (startMoment.hour() < 8) {
+      startMoment.hour(8);
+    }
+    return startMoment.toISOString();
+  };
+
+  capEndTime = end => {
+    const endMoment = moment(end);
+    if (endMoment.hour() > 18) {
+      endMoment.hour(18);
+    }
+    return endMoment.toISOString();
+  };
+
   prevClick = schedulerData => {
     // Goes back 1 day
     console.log("prevClick");
 
     schedulerData.prev();
 
-    schedulerData.setEvents(events);
+    getEvents(new Date (schedulerData.startDate)).then(events => {
 
-    this.setState({
-      schedulerData
+      //Receives the events from the server and transforms them into the scheduler format
+      schedulerData.setEvents(
+        events.map(event => ({
+          id: event.id,
+          title: event.task.name,
+          start: event.start,
+          end: event.end,
+          resourceId: event.user.id,
+          bgColor: event.task.color
+        }))
+      );
+
+      this.setState({
+        schedulerData
+      });
     });
   };
 
@@ -151,10 +161,23 @@ class WorkSchedule extends Component {
 
     schedulerData.next();
 
-    schedulerData.setEvents(events);
+    getEvents(new Date (schedulerData.startDate)).then(events => {
 
-    this.setState({
-      schedulerData
+      //Receives the events from the server and transforms them into the scheduler format
+      schedulerData.setEvents(
+        events.map(event => ({
+          id: event.id,
+          title: event.task.name,
+          start: event.start,
+          end: event.end,
+          resourceId: event.user.id,
+          bgColor: event.task.color
+        }))
+      );
+
+      this.setState({
+        schedulerData
+      });
     });
   };
 
@@ -163,7 +186,7 @@ class WorkSchedule extends Component {
 
     schedulerData.config.creatable = !view.isEventPerspective;
 
-    schedulerData.setEvents(events);
+    schedulerData.setEvents([]);
 
     this.setState({
       schedulerData
@@ -171,128 +194,179 @@ class WorkSchedule extends Component {
   };
 
   onSelectDate = (schedulerData, date) => {
-    // TODO: Go to server and fetch the work schedule for the date selected
-    console.log(`onSelectDate {date: ${date}}`);
+    getEvents(date).then(events => {
+      schedulerData.setDate(date);
 
-    schedulerData.setDate(date);
+      //Receives the events from the server and transforms them into the scheduler format
+      schedulerData.setEvents(
+        events.map(event => ({
+          id: event.id,
+          title: event.task.name,
+          start: event.start,
+          end: event.end,
+          resourceId: event.user.id,
+          bgColor: event.task.color
+        }))
+      );
 
-    schedulerData.setEvents(events);
+      this.setState({
+        schedulerData
+      });
+    });
+  };
+
+  eventItemClick = (schedulerData, event) => {
+    deleteEvent(event.id).then(() => {
+      schedulerData.removeEventById(event.id);
+
+      this.setState({
+        schedulerData
+      });
+    });
+  };
+
+  updateEventStart = (schedulerData, event, start) => {
+    start = this.capStartTime(start);
+
+    editEvent(event.id, start, undefined, undefined, undefined).then(() => {
+      schedulerData.updateEventStart(event, start);
+
+      this.setState({
+        schedulerData
+      });
+    });
+  };
+
+  updateEventEnd = (schedulerData, event, end) => {
+    end = this.capEndTime(end);
+
+    editEvent(event.id, undefined, end, undefined, undefined).then(() => {
+      schedulerData.updateEventEnd(event, end);
+
+      this.setState({
+        schedulerData
+      });
+    });
+  };
+
+  moveEvent = (schedulerData, event, resourceId, resourceName, start, end) => {
+    start = this.capStartTime(start);
+    end = this.capEndTime(end);
+
+    editEvent(event.id, start, end, undefined, resourceId).then(() => {
+      schedulerData.moveEvent(event, resourceId, resourceName, start, end);
+
+      this.setState({
+        schedulerData
+      });
+    });
+  };
+
+  newEvent = (schedulerData, resourceId, resourceName, start, end) => {
+    start = this.capStartTime(start);
+    end = this.capEndTime(end);
+
+    if (this.state.activeTaskId === null) {
+      message.error("You must select a task first.");
+      return;
+    }
+
+    createEvent(start, end, this.state.activeTaskId, resourceId).then(event => {
+      schedulerData.addEvent({
+        id: event.id,
+        title: event.task.name,
+        start: event.start,
+        end: event.end,
+        resourceId: event.user.id,
+        bgColor: event.task.color
+      });
+
+      this.setState({
+        viewModel: schedulerData
+      });
+    });
+  };
+
+  conflictOccurred = (schedulerData, action, event, type, resourceId, resourceName, start, end) => {
+    message.error(`${resourceName} already has a task scheduled for this slot.`);
+  };
+
+  toggleExpandFunc = (schedulerData, resourceId) => {
+    console.log(`toggleExpandFunc {resourceId: ${resourceId}}`);
+
+    schedulerData.toggleExpandStatus(resourceId);
 
     this.setState({
       schedulerData
     });
   };
 
-  eventClicked = (schedulerData, event) => {
-    // THIS HAPPENS WHEN AN EVENT IS CLICKED - PURPOSE?!?
-    console.log(`eventClicked {id: ${event.id}, title: ${event.title}}`);
-
-    schedulerData.removeEventById(event.id);
-
+  handleClickTask = taskId => {
     this.setState({
-      schedulerData
-    });
-  };
-
-  newEvent = (schedulerData, userId, slotName, start, end, type, item) => {
-    // TO CREATE NEW EVENT - MUST SELECT TASK?!?!
-    // SYNC TO SERVER slot
-    console.log(
-      `newEvent {userId: ${userId}, slotName: ${slotName}, start: ${start}, end: ${end}, type: ${type}, item: ${item}}`
-    );
-
-    let newFreshId = 0;
-
-    schedulerData.events.forEach(item => {
-      if (item.id >= newFreshId) newFreshId = item.id + 1;
-    });
-
-    let newEvent = {
-      id: newFreshId,
-      title: "New event you just created",
-      start: start,
-      end: end,
-      resourceId: userId,
-      bgColor: "purple"
-    };
-
-    schedulerData.addEvent(newEvent);
-
-    this.setState({
-      viewModel: schedulerData
-    });
-  };
-
-  updateEventStart = (schedulerData, event, newStart) => {
-    // EVENT WAS MOVED
-    // SYNC TO SERVER
-    console.log(`updateEventStart {eventId: ${event.id}, eventTitle: ${event.title}, newStart: ${newStart}}`);
-    schedulerData.updateEventStart(event, newStart);
-
-    this.setState({
-      schedulerData
-    });
-  };
-
-  updateEventEnd = (schedulerData, event, newEnd) => {
-    // EVENT WAS MOVED
-    // SYNC TO SERVER
-    console.log(`updateEventEnd {eventId: ${event.id}, eventTitle: ${event.title}, newEnd: ${newEnd}}`);
-
-    schedulerData.updateEventEnd(event, newEnd);
-
-    this.setState({
-      schedulerData
-    });
-  };
-
-  moveEvent = (schedulerData, event, slotId, slotName, start, end) => {
-    console.log(
-      `moveEvent {eventId: ${event.id}, eventTitle: ${event.title}, newSlotId: ${slotId}, newSlotName: ${slotName}, newStart: ${start}, newEnd: ${end}`
-    );
-
-    schedulerData.moveEvent(event, slotId, slotName, start, end);
-
-    this.setState({
-      schedulerData
-    });
-  };
-
-  conflictOccurred = (schedulerData, action, event, type, slotId, slotName, start, end) => {
-    message.error(`${slotName} already has a task scheduled for this slot!`);
-  };
-
-  toggleExpandFunc = (schedulerData, slotId) => {
-    console.log(`toggleExpandFunc {slotId: ${slotId}}`);
-
-    schedulerData.toggleExpandStatus(slotId);
-
-    this.setState({
-      schedulerData
+      activeTaskId: taskId
     });
   };
 
   render() {
+    const birthdayUserNames = this.state.users.filter(user => {
+      const date = moment(this.state.schedulerData.startDate);
+      const birthday = moment(user.birthday);
+      return date.month() === birthday.month() && date.date() === birthday.date();
+    })
+    .map(user => user.name);
+
     return (
-      <>
-        <Typography.Title level={3}>Work Schedule</Typography.Title>
+     <>
+      <Typography.Title level={3}>Work Schedule</Typography.Title>
         <Card>
-          <Scheduler
-            schedulerData={this.state.schedulerData}
-            prevClick={this.prevClick}
-            nextClick={this.nextClick}
-            onViewChange={this.onViewChange}
-            onSelectDate={this.onSelectDate}
-            eventItemClick={this.eventClicked}
-            updateEventStart={this.updateEventStart}
-            updateEventEnd={this.updateEventEnd}
-            moveEvent={this.moveEvent}
-            newEvent={this.newEvent}
-            conflictOccurred={this.conflictOccurred}
-            toggleExpandFunc={this.toggleExpandFunc}
-          />
+          <Row>
+      <Col span={12} offset={6}>
+        { birthdayUserNames.length > 0 && <Alert message={`Happy birthday ${birthdayUserNames.join(' and ')}!`} type="info" />}
+        
+      
+      </Col>
+      </Row>
+          <Row gutter={16}>
+            <Col span={3} style={{ paddingTop: "76px" }}>
+              <Affix offsetTop={24}>
+                {this.state.tasks.map(task => (
+                  <div
+                    key={task.id}
+                    className="round-all event-item"
+                    style={{
+                      cursor: "pointer",
+                      height: "22px",
+                      marginBottom: "12px",
+                      backgroundColor: task.color,
+                      boxShadow: task.id === this.state.activeTaskId && `0px 0px 12px 0px ${task.color}`,
+                      transform: task.id === this.state.activeTaskId && "scale(1.05)"
+                    }}
+                    onClick={() => this.handleClickTask(task.id)}
+                  >
+                    <span style={{ marginLeft: "10px", lineHeight: "22px" }}>{task.name}</span>
+                  </div>
+                ))}
+              </Affix>
+            </Col>
+            <Col span={21}>
+              <Scheduler
+                schedulerData={this.state.schedulerData}
+                prevClick={this.prevClick}
+                nextClick={this.nextClick}
+                onViewChange={this.onViewChange}
+                onSelectDate={this.onSelectDate}
+                eventItemClick={this.eventItemClick}
+                updateEventStart={this.updateEventStart}
+                updateEventEnd={this.updateEventEnd}
+                moveEvent={this.moveEvent}
+                newEvent={this.newEvent}
+                conflictOccurred={this.conflictOccurred}
+                toggleExpandFunc={this.toggleExpandFunc}
+              />
+            </Col>
+          </Row>
         </Card>
-      </>
+        </>
     );
   }
 }

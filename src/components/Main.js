@@ -1,12 +1,14 @@
 import React, { Component } from "react";
-import { Layout, Menu, Button} from "antd";
-import { BrowserRouter as Router, Route, Link, withRouter } from "react-router-dom";
+import { Layout, Menu, Button } from "antd";
+import { BrowserRouter as Router, Route, Switch, Link, withRouter } from "react-router-dom";
 import { ScheduleOutlined, ControlOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
 import WorkSchedule from "./WorkSchedule";
 import Tasks from "./tasks/Tasks";
 import Absences from "./absences/Absences";
 import Users from "./users/Users";
 import { removeToken } from "../utils/auth";
+import icon from "../images/taskphase_icon.png";
+import logo from "../images/taskphase.png";
 
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
@@ -21,17 +23,19 @@ class Main extends Component {
     this.setState({ collapsed });
   };
 
-  handleClickLogout= () => {
-removeToken()
-this.props.history.push("/")
-  } 
+  handleClickLogout = () => {
+    removeToken();
+    this.props.history.push("/");
+  };
 
   render() {
     return (
       <Router>
         <Layout style={{ minHeight: "100vh" }}>
           <Sider collapsible collapsed={this.state.collapsed} onCollapse={this.handleCollapse}>
-            <div className="logo">Logo</div>
+            <div style={{ padding: "16px", height: "64px", textAlign: "center" }}>
+              <img src={this.state.collapsed ? icon : logo} alt="logo" style={{ height: "32px" }} />
+            </div>
             <Menu theme="dark" defaultSelectedKeys={["3"]} mode="inline">
               <Menu.Item key="work-schedule">
                 <ScheduleOutlined />
@@ -64,29 +68,30 @@ this.props.history.push("/")
             </Menu>
           </Sider>
           <Layout className="site-layout">
-            <Header className="site-layout-background" style={{ padding: '24px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center'} }>
-            <Button
-            type="primary"
-            icon={<LogoutOutlined />}
-            onClick={this.handleClickLogout}
-          >
-            Logout
-          </Button>
+            <Header
+              className="site-layout-background"
+              style={{ padding: "24px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}
+            >
+              <Button type="primary" icon={<LogoutOutlined />} onClick={this.handleClickLogout}>
+                Logout
+              </Button>
             </Header>
             <Content style={{ margin: "24px" }}>
               <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
-                <Route path="/work-schedule">
-                  <WorkSchedule />
-                </Route>
-                <Route path="/tasks">
-                  <Tasks />
-                </Route>
-                <Route exact path="/users">
-                  <Users />
-                </Route>
-                <Route path="/users/absences">
-                  <Absences />
-                </Route>
+                <Switch>
+                  <Route exact path={["/", "/work-schedule"]}>
+                    <WorkSchedule />
+                  </Route>
+                  <Route exact path="/tasks">
+                    <Tasks />
+                  </Route>
+                  <Route exact path="/users">
+                    <Users />
+                  </Route>
+                  <Route exact path="/users/absences">
+                    <Absences />
+                  </Route>
+                </Switch>
               </div>
             </Content>
             <Footer style={{ textAlign: "center" }}>2020 Created by Ana Morais</Footer>
@@ -97,4 +102,4 @@ this.props.history.push("/")
   }
 }
 
-export default withRouter (Main);
+export default withRouter(Main);

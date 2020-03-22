@@ -35,9 +35,19 @@
   margin: 1px;
   border-radius: 2px;
 }
+
 .task-card .color-picker {
   position: absolute !important;
   border-radius: 2px !important;
   margin-top: 4px;
   z-index: 1000;
+}
+
+.ant-picker-calendar-mode-switch {
+  display: none;
+}
+
+.absences-calendar-cell {
+  list-style: none;
+  padding: 0;
 }

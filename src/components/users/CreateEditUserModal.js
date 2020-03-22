@@ -40,6 +40,10 @@ const CreateEditUserModal = props => {
           label="Birthdate"
           rules={[
             {
+              required: true,
+              message: "Please input the birthdate of the user!"
+            },
+            {
               validator: (rule, value) => {
                 if (!value || value < new Date()) {
                   return Promise.resolve();

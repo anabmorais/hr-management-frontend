@@ -9,28 +9,6 @@ const NEW_TASK = {
 };
 
 class TaskCard extends Component {
-  static colors = [
-    "#255586",
-    "#68C6D2",
-    "#77ACBB",
-    "#BFDBF7",
-    "#837D83",
-    "#7A607D",
-    "#DFC6DD",
-    "#A42546",
-    "#DE5566",
-    "#F69D88",
-    "#FFCAAF",
-    "#FFF8A3",
-    "#FFF7DF",
-    "#ECCEB7",
-    "#C37756",
-    "#916A64",
-    "#456E75",
-    "#8FA17A",
-    "#CCF4D1",
-    "#90BEB1"
-  ];
 
   constructor(props) {
     super(props);
@@ -138,7 +116,7 @@ class TaskCard extends Component {
         {this.state.isVisibleColorPicker && (
           <GithubPicker
             className="color-picker"
-            colors={TaskCard.colors}
+            colors={this.props.colors}
             width="262px"
             onChangeComplete={this.handleChangeColor}
           />

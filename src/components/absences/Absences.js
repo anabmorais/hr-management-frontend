@@ -1,6 +1,6 @@
 import React, { Component } from "react";
-import { Button, Calendar, Card, Typography } from "antd";
-import { CalendarOutlined, DeleteTwoTone} from "@ant-design/icons";
+import { Button, Calendar, Card, Typography, Tooltip, Popconfirm } from "antd";
+import { CalendarOutlined, DeleteTwoTone } from "@ant-design/icons";
 import AddAbsencesModal from "./AddAbsencesModal";
 import moment from "moment";
 import { getAbsences, createAbsence, deleteAbsence } from "../../api/absences";
@@ -48,28 +48,41 @@ class Absences extends Component {
 
   dateCellRender = date => {
     return (
-      <ul className="events">
+      <ul className="absences-calendar-cell">
         {this.state.absences
           .filter(absence => this.isDateEqual(absence.date, date))
           .map(absence => (
-            <li key={absence.key}>{absence.user.name} <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 15 }} onClick={() => this.handleAbsencesDelete(absence.key)}/></li>
+            <Tooltip placement="left" title={absence.user.area}>
+              <li key={absence.key}>
+                {absence.user.name}
+                <Popconfirm
+                  placement="right"
+                  title={`Are you sure to delete ${absence.user.name}'s absence?`}
+                  onConfirm={() => this.handleAbsencesDelete(absence.key)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 15, marginLeft:"6px" }} />
+                </Popconfirm>
+              </li>
+            </Tooltip>
           ))}
       </ul>
     );
   };
 
   handleAbsencesDelete = absenceId =>
-  deleteAbsence(absenceId).then(() => {
-    this.setState(stateCopy => {
-      const absenceIndexToRemove = stateCopy.absences.findIndex(absence => absence.key === absenceId);
+    deleteAbsence(absenceId).then(() => {
+      this.setState(stateCopy => {
+        const absenceIndexToRemove = stateCopy.absences.findIndex(absence => absence.key === absenceId);
 
-      if (absenceIndexToRemove !== -1) {
-        stateCopy.absences.splice(absenceIndexToRemove, 1);
-      }
+        if (absenceIndexToRemove !== -1) {
+          stateCopy.absences.splice(absenceIndexToRemove, 1);
+        }
 
-      return stateCopy;
+        return stateCopy;
+      });
     });
-  });
 
   handleClickAddAbsences = () => {
     this.setState({ isVisibleAddAbsences: true });
@@ -119,7 +132,7 @@ class Absences extends Component {
               visible={isVisibleAddAbsences}
               onSubmit={this.handleSubmitAbsences}
               onCancel={this.handleCancelAbsences}
-              users={users} 
+              users={users}
             />
           )}
         </Card>

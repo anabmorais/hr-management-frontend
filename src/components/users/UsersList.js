@@ -5,7 +5,7 @@ import { EditTwoTone, DeleteTwoTone, LockTwoTone } from "@ant-design/icons";
 class UsersList extends Component {
   state = {
     filteredInfo: null,
-    sortedInfo: null
+    sortedInfo: { columnKey: "name", order: "ascend" }
   };
 
   handleChange = (pagination, filters, sorter) => {
@@ -71,22 +71,46 @@ class UsersList extends Component {
           return 0;
         },
         sortOrder: sortedInfo.columnKey === "area" && sortedInfo.order,
-        ellipsis: true
+        ellipsis: true,
+        render: area => {
+          switch (area) {
+            case "factory":
+              return "Factory";
+            case "lids":
+              return "Lids";
+            case "office":
+              return "Office";
+            case "packaging":
+              return "Packaging";
+            case "presses":
+              return "Presses";
+            case "warehouse":
+              return "Warehouse";
+            default:
+              return area;
+          }
+        }
       },
       {
         title: "Action",
         dataIndex: "key",
         key: "action",
-        render: userId => (
+        render: (userId, user) => (
           <span>
             <EditTwoTone style={{ marginRight: 18, fontSize: 20 }} onClick={() => onClickEdit(userId)} />
             <LockTwoTone
-              twoToneColor="#ffa940"
+              twoToneColor={user.username !== null ? "#73d13d" : "#ffa940"}
               style={{ marginRight: 18, fontSize: 20 }}
               onClick={() => onClickCredentials(userId)}
             />
-             <Popconfirm placement="right" title="Are you sure to delete this user?" onConfirm={() => onClickDelete(userId)} okText="Yes" cancelText="No">
-            <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 20 }} />
+            <Popconfirm
+              placement="right"
+              title={`Are you sure to delete ${user.name}?`}
+              onConfirm={() => onClickDelete(userId)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <DeleteTwoTone twoToneColor="#ff4d4f" style={{ fontSize: 20 }} />
             </Popconfirm>
           </span>
         )

@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { withRouter } from "react-router-dom";
+import { withRouter, Link } from "react-router-dom";
 import { Form, Input, Button, Alert } from "antd";
 import { UserOutlined, LockOutlined } from "@ant-design/icons";
 import { loginUser } from "../api/users";
@@ -65,6 +65,9 @@ class Login extends Component {
             <Form.Item>
               <Button type="primary" htmlType="submit" className="login-form-button">
                 Log in
+              </Button>
+              <Button type="primary" className="login-form-button">
+                <Link to={"/work-schedule-overview"}>View the planning</Link>
               </Button>
             </Form.Item>
           </Form>

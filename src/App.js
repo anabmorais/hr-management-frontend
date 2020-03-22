@@ -6,6 +6,7 @@ import Main from "./components/Main";
 import "./App.css";
 import {DragDropContext} from 'react-dnd'
 import HTML5Backend from 'react-dnd-html5-backend'
+import WorkSchedule from "./components/WorkSchedule";
 
 class App extends Component {
   render() {
@@ -14,6 +15,9 @@ class App extends Component {
         <Switch>
           <Route path="/login">
             <Login />
+          </Route>
+          <Route path="/work-schedule-overview">
+            <WorkSchedule />
           </Route>
           <PrivateRoute path="/">
             <Main />

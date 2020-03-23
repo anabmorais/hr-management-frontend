@@ -1,14 +1,19 @@
 import React, { Component } from "react";
-import { message, Typography, Card, Row, Col, Affix, Alert } from "antd";
+import { message, Row, Col, Affix, Alert } from "antd";
 import Scheduler, { SchedulerData, ViewTypes, CellUnits, DATE_FORMAT } from "react-big-scheduler";
 import moment from "moment";
 import { getUsers } from "../api/users";
 import { getTasks } from "../api/tasks";
 import { createEvent, editEvent, deleteEvent, getEvents } from "../api/work-schedule";
+import { getAbsences } from "../api/absences";
 
 moment.locale("pt-pt");
 
 class WorkSchedule extends Component {
+  static defaultProps = {
+    allowEdit: false
+  };
+
   constructor(props) {
     super(props);
 
@@ -23,6 +28,10 @@ class WorkSchedule extends Component {
         dayCellWidth: 120,
         dayStartFrom: 8,
         dayStopTo: 17,
+        startResizable: props.allowEdit,
+        endResizable: props.allowEdit,
+        movable: props.allowEdit,
+        creatable: props.allowEdit,
         checkConflict: true,
         recurringEventsEnabled: false,
         resourceName: "Employee",
@@ -53,6 +62,7 @@ class WorkSchedule extends Component {
     this.state = {
       users: [],
       tasks: [],
+      absences: [],
       schedulerData,
       activeTaskId: null
     };
@@ -61,7 +71,8 @@ class WorkSchedule extends Component {
   componentDidMount() {
     this.getAllUsers();
     this.getAllTasks();
-    this.getEvents(this.state.schedulerData)
+    this.getDayAbsences(this.state.schedulerData);
+    this.getDayEvents(this.state.schedulerData);
   }
 
   getAllUsers = () =>
@@ -75,7 +86,11 @@ class WorkSchedule extends Component {
           area: user.area
         }));
 
-        stateCopy.schedulerData.setResources(stateCopy.users.filter(user => user.area !== 'office'));
+        stateCopy.schedulerData.setResources(
+          stateCopy.users
+            .filter(user => user.area !== "office")
+            .filter(user => stateCopy.absences.every(absence => absence.user.id !== user.id))
+        );
 
         return stateCopy;
       });
@@ -92,26 +107,46 @@ class WorkSchedule extends Component {
       });
     });
 
-    getEvents = schedulerData => {
-      getEvents(new Date (schedulerData.startDate)).then(events => {
+  getDayAbsences = schedulerData => {
+    const date = new Date(schedulerData.startDate);
+    getAbsences(undefined, date, date).then(data => {
+      this.setState(stateCopy => {
+        stateCopy.absences = data.map(absence => ({
+          id: absence.id,
+          date: absence.date,
+          user: absence.user
+        }));
 
-        //Receives the events from the server and transforms them into the scheduler format
-        schedulerData.setEvents(
-          events.map(event => ({
-            id: event.id,
-            title: event.task.name,
-            start: event.start,
-            end: event.end,
-            resourceId: event.user.id,
-            bgColor: event.task.color
-          }))
+        stateCopy.schedulerData.setResources(
+          stateCopy.users
+            .filter(user => user.area !== "office")
+            .filter(user => stateCopy.absences.every(absence => absence.user.id !== user.id))
         );
-  
-        this.setState({
-          schedulerData
-        });
+
+        return stateCopy;
       });
-    }
+    });
+  };
+
+  getDayEvents = schedulerData => {
+    getEvents(new Date(schedulerData.startDate)).then(events => {
+      //Receives the events from the server and transforms them into the scheduler format
+      schedulerData.setEvents(
+        events.map(event => ({
+          id: event.id,
+          title: event.task.name,
+          start: event.start,
+          end: event.end,
+          resourceId: event.user.id,
+          bgColor: event.task.color
+        }))
+      );
+
+      this.setState({
+        schedulerData
+      });
+    });
+  };
 
   capStartTime = start => {
     const startMoment = moment(start);
@@ -130,55 +165,17 @@ class WorkSchedule extends Component {
   };
 
   prevClick = schedulerData => {
-    // Goes back 1 day
-    console.log("prevClick");
-
     schedulerData.prev();
 
-    getEvents(new Date (schedulerData.startDate)).then(events => {
-
-      //Receives the events from the server and transforms them into the scheduler format
-      schedulerData.setEvents(
-        events.map(event => ({
-          id: event.id,
-          title: event.task.name,
-          start: event.start,
-          end: event.end,
-          resourceId: event.user.id,
-          bgColor: event.task.color
-        }))
-      );
-
-      this.setState({
-        schedulerData
-      });
-    });
+    this.getDayEvents(schedulerData);
+    this.getDayAbsences(schedulerData);
   };
 
   nextClick = schedulerData => {
-    // Goes forward 1 day
-    console.log("nextClick");
-
     schedulerData.next();
 
-    getEvents(new Date (schedulerData.startDate)).then(events => {
-
-      //Receives the events from the server and transforms them into the scheduler format
-      schedulerData.setEvents(
-        events.map(event => ({
-          id: event.id,
-          title: event.task.name,
-          start: event.start,
-          end: event.end,
-          resourceId: event.user.id,
-          bgColor: event.task.color
-        }))
-      );
-
-      this.setState({
-        schedulerData
-      });
-    });
+    this.getDayEvents(schedulerData);
+    this.getDayAbsences(schedulerData);
   };
 
   onViewChange = (schedulerData, view) => {
@@ -194,25 +191,10 @@ class WorkSchedule extends Component {
   };
 
   onSelectDate = (schedulerData, date) => {
-    getEvents(date).then(events => {
-      schedulerData.setDate(date);
+    schedulerData.setDate(date);
 
-      //Receives the events from the server and transforms them into the scheduler format
-      schedulerData.setEvents(
-        events.map(event => ({
-          id: event.id,
-          title: event.task.name,
-          start: event.start,
-          end: event.end,
-          resourceId: event.user.id,
-          bgColor: event.task.color
-        }))
-      );
-
-      this.setState({
-        schedulerData
-      });
-    });
+    this.getDayEvents(schedulerData);
+    this.getDayAbsences(schedulerData);
   };
 
   eventItemClick = (schedulerData, event) => {
@@ -308,65 +290,63 @@ class WorkSchedule extends Component {
   };
 
   render() {
-    const birthdayUserNames = this.state.users.filter(user => {
-      const date = moment(this.state.schedulerData.startDate);
-      const birthday = moment(user.birthday);
-      return date.month() === birthday.month() && date.date() === birthday.date();
-    })
-    .map(user => user.name);
+    const birthdayUserNames = this.state.users
+      .filter(user => {
+        const date = moment(this.state.schedulerData.startDate);
+        const birthday = moment(user.birthday);
+        return date.month() === birthday.month() && date.date() === birthday.date();
+      })
+      .map(user => user.name);
 
     return (
-     <>
-      <Typography.Title level={3}>Work Schedule</Typography.Title>
-        <Card>
-          <Row>
-      <Col span={12} offset={6}>
-        { birthdayUserNames.length > 0 && <Alert message={`Happy birthday ${birthdayUserNames.join(' and ')}!`} type="info" />}
-        
-      
-      </Col>
-      </Row>
-          <Row gutter={16}>
-            <Col span={3} style={{ paddingTop: "76px" }}>
-              <Affix offsetTop={24}>
-                {this.state.tasks.map(task => (
-                  <div
-                    key={task.id}
-                    className="round-all event-item"
-                    style={{
-                      cursor: "pointer",
-                      height: "22px",
-                      marginBottom: "12px",
-                      backgroundColor: task.color,
-                      boxShadow: task.id === this.state.activeTaskId && `0px 0px 12px 0px ${task.color}`,
-                      transform: task.id === this.state.activeTaskId && "scale(1.05)"
-                    }}
-                    onClick={() => this.handleClickTask(task.id)}
-                  >
-                    <span style={{ marginLeft: "10px", lineHeight: "22px" }}>{task.name}</span>
-                  </div>
-                ))}
-              </Affix>
-            </Col>
-            <Col span={21}>
-              <Scheduler
-                schedulerData={this.state.schedulerData}
-                prevClick={this.prevClick}
-                nextClick={this.nextClick}
-                onViewChange={this.onViewChange}
-                onSelectDate={this.onSelectDate}
-                eventItemClick={this.eventItemClick}
-                updateEventStart={this.updateEventStart}
-                updateEventEnd={this.updateEventEnd}
-                moveEvent={this.moveEvent}
-                newEvent={this.newEvent}
-                conflictOccurred={this.conflictOccurred}
-                toggleExpandFunc={this.toggleExpandFunc}
-              />
-            </Col>
-          </Row>
-        </Card>
-        </>
+      <>
+        <Row justify="center">
+          <Col span={4}>
+            {birthdayUserNames.length > 0 && (
+              <Alert message={`Happy birthday ${birthdayUserNames.join(" and ")}!`} type="info" />
+            )}
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col span={3} style={{ paddingTop: "76px" }}>
+            <Affix offsetTop={24}>
+              {this.state.tasks.map(task => (
+                <div
+                  key={task.id}
+                  className="round-all event-item"
+                  style={{
+                    cursor: this.props.allowEdit ? "pointer" : "default",
+                    height: "22px",
+                    marginBottom: "12px",
+                    backgroundColor: task.color,
+                    boxShadow: task.id === this.state.activeTaskId && `0px 0px 12px 0px ${task.color}`,
+                    transform: task.id === this.state.activeTaskId && "scale(1.05)"
+                  }}
+                  onClick={this.props.allowEdit ? () => this.handleClickTask(task.id) : null}
+                >
+                  <span style={{ marginLeft: "10px", lineHeight: "22px" }}>{task.name}</span>
+                </div>
+              ))}
+            </Affix>
+          </Col>
+          <Col span={21}>
+            <Scheduler
+              schedulerData={this.state.schedulerData}
+              prevClick={this.prevClick}
+              nextClick={this.nextClick}
+              onViewChange={this.onViewChange}
+              onSelectDate={this.onSelectDate}
+              eventItemClick={this.eventItemClick}
+              updateEventStart={this.updateEventStart}
+              updateEventEnd={this.updateEventEnd}
+              moveEvent={this.moveEvent}
+              newEvent={this.newEvent}
+              conflictOccurred={this.conflictOccurred}
+              toggleExpandFunc={this.toggleExpandFunc}
+            />
+          </Col>
+        </Row>
+      </>
     );
   }
 }

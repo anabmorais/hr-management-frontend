@@ -1,14 +1,14 @@
 import React, { Component } from "react";
-import { Layout, Menu, Button } from "antd";
+import { Layout, Menu, Button, Col} from "antd";
 import { BrowserRouter as Router, Route, Switch, Link, withRouter } from "react-router-dom";
 import { ScheduleOutlined, ControlOutlined, UserOutlined, LogoutOutlined } from "@ant-design/icons";
-import WorkSchedule from "./WorkSchedule";
 import Tasks from "./tasks/Tasks";
 import Absences from "./absences/Absences";
 import Users from "./users/Users";
 import { removeToken } from "../utils/auth";
 import icon from "../images/taskphase_icon.png";
 import logo from "../images/taskphase.png";
+import WorkScheduleSection from "./WorkScheduleSection";
 
 const { Header, Content, Footer, Sider } = Layout;
 const { SubMenu } = Menu;
@@ -16,7 +16,20 @@ const { SubMenu } = Menu;
 // https://gist.github.com/VesperDev/e233115469a6c53bb96443f66385aa22
 class Main extends Component {
   state = {
-    collapsed: false
+    collapsed: false,
+    hour: null
+  };
+
+  componentDidMount() {
+    this.getHour();
+  }
+
+  getHour = () => {
+    const date = new Date();
+    const hour = date.getHours();
+    this.setState({
+      hour
+    });
   };
 
   handleCollapse = collapsed => {
@@ -29,6 +42,7 @@ class Main extends Component {
   };
 
   render() {
+    const { hour } = this.state;
     return (
       <Router>
         <Layout style={{ minHeight: "100vh" }}>
@@ -72,6 +86,13 @@ class Main extends Component {
               className="site-layout-background"
               style={{ padding: "24px", display: "flex", justifyContent: "flex-end", alignItems: "center" }}
             >
+              
+                <Col span={8} offset={8}>
+                  <div>
+                    <h2>{hour < 12 ? "Good Morning!" : "Good evening!"}</h2>
+                  </div>
+                </Col>
+             
               <Button type="primary" icon={<LogoutOutlined />} onClick={this.handleClickLogout}>
                 Logout
               </Button>
@@ -80,7 +101,7 @@ class Main extends Component {
               <div className="site-layout-background" style={{ padding: 24, minHeight: 360 }}>
                 <Switch>
                   <Route exact path={["/", "/work-schedule"]}>
-                    <WorkSchedule />
+                    <WorkScheduleSection />
                   </Route>
                   <Route exact path="/tasks">
                     <Tasks />

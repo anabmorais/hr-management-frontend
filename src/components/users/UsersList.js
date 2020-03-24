@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Table, Popconfirm } from "antd";
 import { EditTwoTone, DeleteTwoTone, LockTwoTone } from "@ant-design/icons";
+import { alphabeticSort } from "../../utils/users";
 
 class UsersList extends Component {
   state = {
@@ -27,15 +28,7 @@ class UsersList extends Component {
         title: "Name",
         dataIndex: "name",
         key: "name",
-        sorter: (a, b) => {
-          if (a.name.toLowerCase() < b.name.toLowerCase()) {
-            return -1;
-          }
-          if (a.name.toLowerCase() > b.name.toLowerCase()) {
-            return 1;
-          }
-          return 0;
-        },
+        sorter: alphabeticSort,
         sortOrder: sortedInfo.columnKey === "name" && sortedInfo.order,
         ellipsis: true
       },

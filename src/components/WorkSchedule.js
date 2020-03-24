@@ -6,6 +6,7 @@ import { getUsers } from "../api/users";
 import { getTasks } from "../api/tasks";
 import { createEvent, editEvent, deleteEvent, getEvents } from "../api/work-schedule";
 import { getAbsences } from "../api/absences";
+import { alphabeticSort } from "../utils/users";
 
 moment.locale("pt-pt");
 
@@ -90,6 +91,7 @@ class WorkSchedule extends Component {
           stateCopy.users
             .filter(user => user.area !== "office")
             .filter(user => stateCopy.absences.every(absence => absence.user.id !== user.id))
+            .sort(alphabeticSort)
         );
 
         return stateCopy;
@@ -121,6 +123,7 @@ class WorkSchedule extends Component {
           stateCopy.users
             .filter(user => user.area !== "office")
             .filter(user => stateCopy.absences.every(absence => absence.user.id !== user.id))
+            .sort(alphabeticSort)
         );
 
         return stateCopy;
@@ -301,7 +304,7 @@ class WorkSchedule extends Component {
     return (
       <>
         <Row justify="center">
-          <Col span={4}>
+          <Col span={6}>
             {birthdayUserNames.length > 0 && (
               <Alert message={`Happy birthday ${birthdayUserNames.join(" and ")}!`} type="info" />
             )}
